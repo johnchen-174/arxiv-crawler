@@ -1,0 +1,55 @@
+import sqlite3
+from datetime import datetime
+
+class PaperDatabase:
+    def __init__(self, db_path='papersd.db'):
+        self.db_path = db_path
+        self.create_table()
+
+    def create_table(self):
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS papers
+            (id INTEGER PRIMARY KEY AUTOINCREMENT,
+             title TEXT,
+             authors TEXT,
+             abstract TEXT,
+             link TEXT,
+             category TEXT,
+             created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+        ''')
+        conn.commit()
+        conn.close()
+
+    def insert_paper(self, paper_info, category):
+        conn = sqlite3.connect(self.db_path)   #每次使用时再去连接库
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO papers (title, authors, abstract, link, category)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            paper_info.get('标题', ''),
+            paper_info.get('作者', ''),
+            paper_info.get('摘要', ''),
+            paper_info.get('链接', ''),
+            category
+        ))
+        conn.commit()
+        conn.close()
+
+    def get_all_papers(self):
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute('SELECT * FROM papers ORDER BY created_time DESC')
+        papers = c.fetchall()
+        conn.close()
+        return papers
+
+    def get_papers_by_category(self, category):
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute('SELECT * FROM papers WHERE category=? ORDER BY created_time DESC', (category,))
+        papers = c.fetchall()
+        conn.close()
+        return papers
